@@ -55,7 +55,7 @@ export default function Navbar() {
           href="/custom-chatbots"
           className="text-zinc-300 hover:text-white transition"
         >
-          Custom Chatbots
+          AI Knowledge Base
         </Link>
 
         <Link

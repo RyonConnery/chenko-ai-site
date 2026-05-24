@@ -1,45 +1,57 @@
+import Link from "next/link";
 import PageShell from "../components/PageShell";
 
-const chatbotPackages = [
+const aiTypes = [
   {
-    name: "Support Chatbot",
-    use: "Customer questions, business FAQs, and support routing.",
-    features: ["FAQ knowledge base", "Brand voice", "Escalation guidance"],
+    name: "Text and Knowledge AI",
+    description:
+      "AI systems that answer questions, summarize documents, draft content, and help users navigate structured knowledge.",
+    examples: ["Business FAQ assistants", "Course support AI", "Internal documentation helpers"],
   },
   {
-    name: "Education Chatbot",
-    use: "Course help, lesson support, study guidance, and learner Q&A.",
-    features: ["Lesson-aware responses", "Study prompts", "Safety rules"],
+    name: "Workflow AI",
+    description:
+      "AI builds that support repeatable processes such as intake, research, drafting, routing, and reporting.",
+    examples: ["Lead intake", "Research briefs", "Operations checklists"],
   },
   {
-    name: "Project Chatbot",
-    use: "Internal project information, documentation lookup, and workflow help.",
-    features: ["Project context", "Team workflows", "Knowledge refresh plan"],
+    name: "Customer Support AI",
+    description:
+      "Chatbot-style experiences that guide customers through common questions and clarify when human follow-up is needed.",
+    examples: ["Website chatbots", "Product guidance", "Support triage"],
+  },
+  {
+    name: "Creative AI",
+    description:
+      "Generative AI concepts for writing, design planning, game development support, brand assets, and production workflows.",
+    examples: ["Content systems", "Game design assistants", "Brand concept helpers"],
   },
 ];
 
 export default function CustomChatbotsPage() {
   return (
     <PageShell
-      eyebrow="Custom Chatbots"
-      title="Order chatbot systems for customers, learners, and teams."
-      description="ChenkoAI chatbot builds focus on useful behavior, clear scope, brand fit, and safe handoff. Start with the chatbot type that matches the job."
+      eyebrow="AI Knowledge Base"
+      title="Learn what kinds of generative AI ChenkoAI can build."
+      description="Use this guide before ordering AI. It explains common AI build types, what they are useful for, and when to request a quote instead of going straight to checkout."
     >
-      <div className="grid gap-6 lg:grid-cols-3">
-        {chatbotPackages.map((chatbot) => (
+      <div className="grid gap-6 lg:grid-cols-2">
+        {aiTypes.map((aiType) => (
           <article
-            key={chatbot.name}
+            key={aiType.name}
             className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6"
           >
-            <h2 className="text-2xl font-bold">{chatbot.name}</h2>
-            <p className="mt-4 leading-7 text-zinc-400">{chatbot.use}</p>
+            <h2 className="text-2xl font-bold">{aiType.name}</h2>
+            <p className="mt-4 leading-7 text-zinc-400">
+              {aiType.description}
+            </p>
             <div className="mt-6 space-y-3">
-              {chatbot.features.map((feature) => (
+              {aiType.examples.map((example) => (
                 <div
-                  key={feature}
+                  key={example}
                   className="rounded-xl border border-zinc-800 bg-black p-3 text-sm text-zinc-300"
                 >
-                  {feature}
+                  {example}
                 </div>
               ))}
             </div>
@@ -47,24 +59,28 @@ export default function CustomChatbotsPage() {
         ))}
       </div>
 
-      <section className="mt-10 grid gap-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-6 md:grid-cols-3">
+      <section className="mt-10 grid gap-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-6 lg:grid-cols-[1fr_280px]">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-cyan-300">
-            Step 1
+          <h2 className="text-2xl font-bold">Questions before ordering?</h2>
+          <p className="mt-3 max-w-3xl leading-7 text-zinc-400">
+            If you are not sure which AI build fits your idea, send a question
+            first. ChenkoAI can help narrow the project into a quote, product
+            purchase, or staged build plan.
           </p>
-          <h3 className="mt-3 text-xl font-bold">Choose purpose</h3>
         </div>
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-cyan-300">
-            Step 2
-          </p>
-          <h3 className="mt-3 text-xl font-bold">Define knowledge</h3>
-        </div>
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-cyan-300">
-            Step 3
-          </p>
-          <h3 className="mt-3 text-xl font-bold">Build and test</h3>
+        <div className="flex flex-col gap-3">
+          <Link
+            href="/order-ai"
+            className="rounded-xl bg-white px-5 py-3 text-center font-semibold text-black transition hover:bg-zinc-200"
+          >
+            Open Order AI
+          </Link>
+          <a
+            href="mailto:contact@chenkosoftworks.com?subject=Question about ChenkoAI builds"
+            className="rounded-xl border border-zinc-700 px-5 py-3 text-center font-semibold text-zinc-100 transition hover:bg-zinc-900"
+          >
+            Contact Us
+          </a>
         </div>
       </section>
     </PageShell>
