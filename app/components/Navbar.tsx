@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { createClient } from "../lib/supabase";
 
 export default function Navbar() {
   const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
+    const supabase = createClient();
 
     supabase.auth.getSession().then(({ data }) => {
       if (mounted) {
@@ -29,8 +30,10 @@ export default function Navbar() {
   }, []);
 
   async function handleSignOut() {
+    const supabase = createClient();
     await supabase.auth.signOut();
     setEmail(null);
+    window.location.href = "/";
   }
 
   return (
