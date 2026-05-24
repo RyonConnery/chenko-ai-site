@@ -12,11 +12,22 @@ type AiProduct = {
   includes: string[];
 };
 
+const assistantOptions = [
+  "Compact website widget",
+  "Full-page assistant UI",
+  "Dark ChenkoAI-style interface",
+  "Light business-style interface",
+  "Embed on existing website",
+  "New hosted chatbot page",
+  "Custom chatbot display name",
+  "Business name in chatbot header",
+];
+
 const aiProducts: AiProduct[] = [
   {
     id: "workflow-starter",
     name: "AI Workflow Starter",
-    price: "Starter build",
+    price: "$99",
     summary:
       "A focused AI system for one repeatable business task, intake process, or productivity workflow.",
     fit: "Best for first AI projects, small business operations, and internal assistants.",
@@ -25,16 +36,20 @@ const aiProducts: AiProduct[] = [
   {
     id: "custom-assistant",
     name: "Custom AI Assistant",
-    price: "Custom build",
+    price: "$299",
     summary:
       "A branded assistant designed around your company knowledge, customer questions, or team process.",
     fit: "Best for support, education, research, and knowledge-base experiences.",
-    includes: ["Assistant behavior design", "Knowledge structure", "Testing support"],
+    includes: [
+      "Assistant behavior design",
+      "Knowledge structure",
+      "Testing support",
+    ],
   },
   {
     id: "automation-build",
     name: "AI Automation Build",
-    price: "Automation build",
+    price: "$799",
     summary:
       "A custom AI-assisted automation concept for intake, drafting, routing, research, or reporting.",
     fit: "Best for repeatable workflows that waste time when handled manually.",
@@ -43,7 +58,7 @@ const aiProducts: AiProduct[] = [
   {
     id: "chatbot-build",
     name: "Custom Chatbot Build",
-    price: "Chatbot build",
+    price: "$1,500",
     summary:
       "A chatbot for customer service, course support, product guidance, or internal documentation lookup.",
     fit: "Best for websites that need guided answers and a clear escalation path.",
@@ -53,6 +68,9 @@ const aiProducts: AiProduct[] = [
 
 export default function OrderAIPage() {
   const [cart, setCart] = useState<string[]>([]);
+  const [selectedAssistantOptions, setSelectedAssistantOptions] = useState<
+    string[]
+  >([]);
 
   const selectedProducts = useMemo(
     () => aiProducts.filter((product) => cart.includes(product.id)),
@@ -64,6 +82,14 @@ export default function OrderAIPage() {
       currentCart.includes(productId)
         ? currentCart.filter((item) => item !== productId)
         : [...currentCart, productId],
+    );
+  }
+
+  function toggleAssistantOption(option: string) {
+    setSelectedAssistantOptions((currentOptions) =>
+      currentOptions.includes(option)
+        ? currentOptions.filter((item) => item !== option)
+        : [...currentOptions, option],
     );
   }
 
@@ -161,6 +187,14 @@ export default function OrderAIPage() {
                 value={product.id}
               />
             ))}
+            {selectedAssistantOptions.map((option) => (
+              <input
+                key={option}
+                type="hidden"
+                name="assistantOptions"
+                value={option}
+              />
+            ))}
             <button
               type="submit"
               disabled={selectedProducts.length === 0}
@@ -178,6 +212,46 @@ export default function OrderAIPage() {
           </a>
         </aside>
       </div>
+
+      <section className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
+        <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-cyan-300">
+              Custom AI Assistant Options
+            </p>
+            <h2 className="mt-3 text-2xl font-bold">
+              Choose the assistant presentation details.
+            </h2>
+            <p className="mt-4 leading-7 text-zinc-400">
+              The assistant is not a fully custom software platform at this
+              price. Clients can choose the UI direction, where it should be
+              hosted or embedded, and the chatbot or business name that appears
+              in the assistant interface.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {assistantOptions.map((option) => {
+              const selected = selectedAssistantOptions.includes(option);
+
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => toggleAssistantOption(option)}
+                  className={`rounded-xl border p-4 text-left text-sm font-semibold transition ${
+                    selected
+                      ? "border-cyan-300 bg-cyan-300 text-black"
+                      : "border-zinc-800 bg-black text-zinc-300 hover:border-zinc-600"
+                  }`}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
     </PageShell>
   );
 }

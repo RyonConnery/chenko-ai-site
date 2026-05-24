@@ -24,6 +24,10 @@ export async function POST(req: Request) {
       .getAll("products")
       .map((product) => String(product))
       .filter(isAiProductId);
+    const assistantOptions = formData
+      .getAll("assistantOptions")
+      .map((option) => String(option))
+      .slice(0, 6);
 
     if (selectedProducts.length === 0) {
       return Response.json(
@@ -59,12 +63,13 @@ export async function POST(req: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: lineItems,
-      success_url: `${origin}/order-ai?checkout=success`,
-      cancel_url: `${origin}/order-ai?checkout=cancelled`,
+      success_url: `${origin}/order-ai/success`,
+      cancel_url: `${origin}/order-ai/cancel`,
       allow_promotion_codes: true,
       metadata: {
         source: "chenkoai-order-ai",
         products: selectedProducts.join(","),
+        assistantOptions: assistantOptions.join(","),
       },
     });
 
