@@ -1,7 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import Link from "next/link";
+import { FormEvent, useEffect, useState } from "react";
 import PageShell from "../components/PageShell";
+import { createClient } from "../lib/supabase";
 
 const projectStages = [
   {
@@ -55,7 +57,33 @@ const uiOptions = [
 ];
 
 export default function ProjectsPage() {
+  const [email, setEmail] = useState<string | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    const supabase = createClient();
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted) {
+        setEmail(data.session?.user.email ?? null);
+        setCheckingSession(false);
+      }
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setEmail(session?.user.email ?? null);
+        setCheckingSession(false);
+      },
+    );
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -149,9 +177,17 @@ export default function ProjectsPage() {
               change checkout, login, Supabase, or Stripe. Customers can use it
               to send the details ChenkoAI needs after payment or quote request.
             </p>
+            <p className="mt-4 rounded-xl border border-zinc-800 bg-black p-4 text-sm text-zinc-300">
+              {checkingSession
+                ? "Checking account status..."
+                : email
+                  ? `Signed in as ${email}.`
+                  : "Sign in or create an account to submit project details."}
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          {email ? (
+            <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block">
                 <span className="text-sm font-semibold text-zinc-300">
@@ -286,7 +322,31 @@ export default function ProjectsPage() {
                 {message}
               </p>
             )}
-          </form>
+            </form>
+          ) : (
+            <div className="rounded-2xl border border-zinc-800 bg-black p-6">
+              <h3 className="text-2xl font-bold">Sign in to submit details</h3>
+              <p className="mt-4 leading-7 text-zinc-400">
+                Project customization submissions are available to signed-in
+                ChenkoAI customers so order details can be connected to a real
+                account.
+              </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <Link
+                  href="/auth"
+                  className="rounded-xl bg-white px-5 py-3 text-center font-semibold text-black transition hover:bg-zinc-200"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/auth?mode=signup"
+                  className="rounded-xl border border-zinc-700 px-5 py-3 text-center font-semibold text-zinc-100 transition hover:bg-zinc-900"
+                >
+                  Create Account
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </PageShell>
