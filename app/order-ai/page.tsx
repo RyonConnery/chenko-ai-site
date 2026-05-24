@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import PageShell from "../components/PageShell";
+import { createClient } from "../lib/supabase";
 
 type AiProduct = {
   id: string;
@@ -68,6 +70,8 @@ const aiProducts: AiProduct[] = [
 
 export default function OrderAIPage() {
   const [cart, setCart] = useState<string[]>([]);
+  const [email, setEmail] = useState<string | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [selectedAssistantOptions, setSelectedAssistantOptions] = useState<
     string[]
   >([]);
@@ -76,6 +80,30 @@ export default function OrderAIPage() {
     () => aiProducts.filter((product) => cart.includes(product.id)),
     [cart],
   );
+
+  useEffect(() => {
+    let mounted = true;
+    const supabase = createClient();
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted) {
+        setEmail(data.session?.user.email ?? null);
+        setCheckingSession(false);
+      }
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setEmail(session?.user.email ?? null);
+        setCheckingSession(false);
+      },
+    );
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   function toggleCart(productId: string) {
     setCart((currentCart) =>
@@ -155,8 +183,15 @@ export default function OrderAIPage() {
         <aside className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 xl:sticky xl:top-6 xl:self-start">
           <h2 className="text-2xl font-bold">AI Build Cart</h2>
           <p className="mt-3 leading-7 text-zinc-400">
-            Select one or more AI builds. Checkout will open Stripe when the
-            ChenkoAI product price IDs are added in Vercel.
+            Select one or more AI builds. Checkout is available to signed-in
+            ChenkoAI customers so orders can be connected to a real customer.
+          </p>
+          <p className="mt-4 rounded-xl border border-zinc-800 bg-black p-4 text-sm text-zinc-300">
+            {checkingSession
+              ? "Checking account status..."
+              : email
+                ? `Signed in as ${email}.`
+                : "Sign in or create an account before checkout."}
           </p>
 
           <div className="mt-6 space-y-3">
@@ -178,7 +213,8 @@ export default function OrderAIPage() {
             )}
           </div>
 
-          <form action="/api/ai-checkout" method="POST" className="mt-6">
+          {email ? (
+            <form action="/api/ai-checkout" method="POST" className="mt-6">
             {selectedProducts.map((product) => (
               <input
                 key={product.id}
@@ -197,12 +233,28 @@ export default function OrderAIPage() {
             ))}
             <button
               type="submit"
-              disabled={selectedProducts.length === 0}
+              disabled={checkingSession || selectedProducts.length === 0}
               className="w-full rounded-xl bg-white px-5 py-3 font-semibold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Checkout with Stripe
             </button>
-          </form>
+            </form>
+          ) : (
+            <div className="mt-6 grid gap-3">
+              <Link
+                href="/auth"
+                className="rounded-xl bg-white px-5 py-3 text-center font-semibold text-black transition hover:bg-zinc-200"
+              >
+                Sign In to Checkout
+              </Link>
+              <Link
+                href="/auth?mode=signup"
+                className="rounded-xl border border-zinc-700 px-5 py-3 text-center font-semibold text-zinc-100 transition hover:bg-zinc-900"
+              >
+                Create Account
+              </Link>
+            </div>
+          )}
 
           <a
             href="mailto:contact@chenkosoftworks.com?subject=Question about ordering ChenkoAI"

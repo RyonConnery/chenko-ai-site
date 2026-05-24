@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { createClient } from "../../../utils/supabase/server";
 
 type AiProductId =
   | "workflow-starter"
@@ -19,6 +20,15 @@ function isAiProductId(value: string): value is AiProductId {
 
 export async function POST(req: Request) {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return Response.redirect(new URL("/auth?mode=signup", req.url), 303);
+    }
+
     const formData = await req.formData();
     const selectedProducts = formData
       .getAll("products")
@@ -68,9 +78,13 @@ export async function POST(req: Request) {
       allow_promotion_codes: true,
       metadata: {
         source: "chenkoai-order-ai",
+        customerEmail: user.email ?? "",
+        supabaseUserId: user.id,
         products: selectedProducts.join(","),
         assistantOptions: assistantOptions.join(","),
       },
+      customer_email: user.email ?? undefined,
+      client_reference_id: user.id,
     });
 
     if (!session.url) {
