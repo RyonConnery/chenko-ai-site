@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
-import { supabase } from "../lib/supabase";
+import { createClient } from "../lib/supabase";
 
 type AuthMode = "signin" | "signup";
 
@@ -15,6 +15,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const supabase = createClient();
     const params = new URLSearchParams(window.location.search);
     if (params.get("mode") === "signup") {
       setMode("signup");
@@ -39,11 +40,19 @@ export default function AuthPage() {
     event.preventDefault();
     setLoading(true);
     setMessage("");
+    const supabase = createClient();
+    const redirectTo = `${window.location.origin}/auth/callback`;
 
     const result =
       mode === "signin"
         ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
+        : await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              emailRedirectTo: redirectTo,
+            },
+          });
 
     setLoading(false);
 
@@ -57,10 +66,15 @@ export default function AuthPage() {
         ? "Signed in successfully."
         : "Account created. Check your email if confirmation is required.",
     );
+
+    if (mode === "signin") {
+      window.location.href = "/dashboard";
+    }
   }
 
   async function handleSignOut() {
     setLoading(true);
+    const supabase = createClient();
     await supabase.auth.signOut();
     setCurrentUserEmail(null);
     setMessage("Signed out.");
