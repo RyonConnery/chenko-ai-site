@@ -1,13 +1,53 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 export default function Navbar() {
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted) {
+        setEmail(data.session?.user.email ?? null);
+      }
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setEmail(session?.user.email ?? null);
+      },
+    );
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    setEmail(null);
+  }
+
   return (
-    <nav className="w-full flex items-center justify-between px-8 py-6 border-b border-zinc-800 bg-black">
+    <nav className="w-full border-b border-zinc-800 bg-black px-8 py-6">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-5">
       <Link href="/" className="text-xl font-bold text-white">
         ChenkoAI
       </Link>
 
-      <div className="flex gap-6 items-center">
+      <div className="flex flex-wrap items-center gap-5 text-sm">
+        <Link
+          href="/order-ai"
+          className="bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-zinc-200 transition"
+        >
+          Order AI
+        </Link>
+
         <Link
           href="/custom-chatbots"
           className="text-zinc-300 hover:text-white transition"
@@ -29,19 +69,30 @@ export default function Navbar() {
           Research
         </Link>
 
-        <Link
-          href="/auth"
-          className="text-zinc-300 hover:text-white transition"
-        >
-          Sign In
-        </Link>
-
-        <Link
-          href="/contact"
-          className="bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-zinc-200 transition"
-        >
-          Order AI
-        </Link>
+        {email ? (
+          <button
+            onClick={handleSignOut}
+            className="rounded-lg border border-zinc-700 px-4 py-2 font-medium text-zinc-200 transition hover:bg-zinc-900 hover:text-white"
+          >
+            Sign Out
+          </button>
+        ) : (
+          <>
+            <Link
+              href="/auth"
+              className="text-zinc-300 hover:text-white transition"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/auth?mode=signup"
+              className="rounded-lg border border-zinc-700 px-4 py-2 font-medium text-zinc-200 transition hover:bg-zinc-900 hover:text-white"
+            >
+              Create Account
+            </Link>
+          </>
+        )}
+      </div>
       </div>
     </nav>
   );
