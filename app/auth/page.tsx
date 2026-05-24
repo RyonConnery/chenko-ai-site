@@ -41,7 +41,10 @@ export default function AuthPage() {
     setLoading(true);
     setMessage("");
     const supabase = createClient();
-    const redirectTo = `${window.location.origin}/auth/callback`;
+    const redirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/auth/callback`
+        : "https://ai.chenkosoftworks.com/auth/callback";
 
     const result =
       mode === "signin"
