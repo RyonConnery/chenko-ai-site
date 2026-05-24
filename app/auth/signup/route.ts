@@ -3,7 +3,22 @@ import { supabaseKey, supabaseUrl } from "../../../utils/supabase/config";
 
 const SIGNUP_REDIRECT_URL = "https://ai.chenkosoftworks.com/auth/callback";
 
+function getErrorMessage(error: unknown) {
+  if (!(error instanceof Error)) {
+    return "Supabase auth request failed. Please try again.";
+  }
+
+  const cause =
+    "cause" in error && error.cause instanceof Error
+      ? ` ${error.cause.message}`
+      : "";
+
+  return `${error.message}${cause}`;
+}
+
 export async function POST(request: Request) {
+  let signupUrl: URL | null = null;
+
   try {
     const { email, password } = await request.json();
 
@@ -14,7 +29,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const signupUrl = new URL(`${supabaseUrl}/auth/v1/signup`);
+    signupUrl = new URL(`${supabaseUrl}/auth/v1/signup`);
     signupUrl.searchParams.set("redirect_to", SIGNUP_REDIRECT_URL);
 
     const response = await fetch(signupUrl, {
@@ -52,10 +67,8 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Supabase auth request failed. Please try again.",
+        error: getErrorMessage(error),
+        authHost: signupUrl?.host ?? "unknown",
       },
       { status: 500 },
     );
