@@ -6,7 +6,10 @@ import { createClient } from "../lib/supabase";
 
 type AuthMode = "signin" | "signup";
 
-const SIGNUP_REDIRECT_URL = "https://ai.chenkosoftworks.com/auth/callback";
+type SignupResponse = {
+  message?: string;
+  error?: string;
+};
 
 export default function AuthPage() {
   const [mode, setMode] = useState<AuthMode>("signin");
@@ -42,34 +45,44 @@ export default function AuthPage() {
     event.preventDefault();
     setLoading(true);
     setMessage("");
-    const supabase = createClient();
 
     try {
-      const result =
-        mode === "signin"
-          ? await supabase.auth.signInWithPassword({ email, password })
-          : await supabase.auth.signUp({
-              email,
-              password,
-              options: {
-                emailRedirectTo: SIGNUP_REDIRECT_URL,
-              },
-            });
+      if (mode === "signup") {
+        const response = await fetch("/auth/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const result = (await response.json()) as SignupResponse;
+
+        if (!response.ok || result.error) {
+          setMessage(result.error ?? "Supabase auth request failed.");
+          return;
+        }
+
+        setMessage(
+          result.message ??
+            "Account created. Check your email to confirm your account.",
+        );
+        return;
+      }
+
+      const supabase = createClient();
+      const result = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (result.error) {
         setMessage(result.error.message);
         return;
       }
 
-      setMessage(
-        mode === "signin"
-          ? "Signed in successfully."
-          : "Account created. Check your email to confirm your account.",
-      );
-
-      if (mode === "signin") {
-        window.location.href = "/dashboard";
-      }
+      setMessage("Signed in successfully.");
+      window.location.href = "/dashboard";
     } catch (error) {
       setMessage(
         error instanceof Error
