@@ -6,6 +6,8 @@ import { createClient } from "../lib/supabase";
 
 type AuthMode = "signin" | "signup";
 
+const SIGNUP_REDIRECT_URL = "https://ai.chenkosoftworks.com/auth/callback";
+
 export default function AuthPage() {
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
@@ -41,37 +43,41 @@ export default function AuthPage() {
     setLoading(true);
     setMessage("");
     const supabase = createClient();
-    const redirectTo =
-      typeof window !== "undefined"
-        ? `${window.location.origin}/auth/callback`
-        : "https://ai.chenkosoftworks.com/auth/callback";
 
-    const result =
-      mode === "signin"
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              emailRedirectTo: redirectTo,
-            },
-          });
+    try {
+      const result =
+        mode === "signin"
+          ? await supabase.auth.signInWithPassword({ email, password })
+          : await supabase.auth.signUp({
+              email,
+              password,
+              options: {
+                emailRedirectTo: SIGNUP_REDIRECT_URL,
+              },
+            });
 
-    setLoading(false);
+      if (result.error) {
+        setMessage(result.error.message);
+        return;
+      }
 
-    if (result.error) {
-      setMessage(result.error.message);
-      return;
-    }
+      setMessage(
+        mode === "signin"
+          ? "Signed in successfully."
+          : "Account created. Check your email to confirm your account.",
+      );
 
-    setMessage(
-      mode === "signin"
-        ? "Signed in successfully."
-        : "Account created. Check your email if confirmation is required.",
-    );
-
-    if (mode === "signin") {
-      window.location.href = "/dashboard";
+      if (mode === "signin") {
+        window.location.href = "/dashboard";
+      }
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Supabase auth request failed. Please try again.",
+      );
+    } finally {
+      setLoading(false);
     }
   }
 
